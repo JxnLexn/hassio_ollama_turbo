@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Ollama Cloud",
+        "description": "Provide your Ollama Cloud API key.",
+        "data": {
+          "api_key": "API Key",
+          "host": "API Endpoint",
+          "model": "Model",
+          "system_prompt": "System Prompt"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to Ollama Cloud. Check your API key and model.",
+      "unknown": "Unexpected error"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Ollama Cloud options",
+        "data": {
+          "host": "API Endpoint",
+          "model": "Model",
+          "system_prompt": "System Prompt"
+        }
+      }
+    }
+  }
+}

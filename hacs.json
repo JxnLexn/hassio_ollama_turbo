@@ -1,0 +1,7 @@
+{
+  "name": "Ollama Cloud",
+  "content_in_root": false,
+  "zip_release": false,
+  "filename": "custom_components/ollama_cloud",
+  "render_readme": true
+}
