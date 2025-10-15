@@ -11,6 +11,16 @@ This custom integration allows Home Assistant to talk to the Ollama Cloud (forme
 
 ## Installation
 
+### HACS (recommended)
+
+1. Ensure you have [HACS](https://hacs.xyz/) installed in your Home Assistant instance.
+2. In HACS, add this repository as a **Custom Repository** of type *Integration* and download **Ollama Cloud**.
+3. Restart Home Assistant once the download completes.
+4. Add the **Ollama Cloud** integration from the Settings → Devices & Services screen.
+5. Provide your Ollama Cloud API key, optional endpoint, model, and system prompt.
+
+### Manual
+
 1. Copy the `custom_components/ollama_cloud` folder into your Home Assistant `config/custom_components` directory.
 2. Restart Home Assistant.
 3. Add the **Ollama Cloud** integration from the Settings → Devices & Services screen.
