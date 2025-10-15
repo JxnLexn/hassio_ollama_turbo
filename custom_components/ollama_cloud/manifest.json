@@ -6,6 +6,6 @@
   "requirements": ["ollama==0.6.0"],
   "dependencies": ["conversation"],
   "iot_class": "cloud_polling",
-  "codeowners": ["@user"],
+  "codeowners": ["@jxnlexn"],
   "version": "0.1.0"
 }
