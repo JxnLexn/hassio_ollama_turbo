@@ -4,6 +4,7 @@
   "config_flow": true,
   "documentation": "https://github.com/home-assistant/core",
   "requirements": ["ollama==0.6.0"],
+  "dependencies": ["conversation"],
   "iot_class": "cloud_polling",
   "codeowners": ["@jxnlexn"],
   "version": "0.1.0"

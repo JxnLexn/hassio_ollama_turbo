@@ -48,7 +48,7 @@ class OllamaCloudAgent(AbstractConversationAgent):
 
     async def async_initialize(self) -> None:
         """Register the agent with Home Assistant."""
-        conversation.async_set_agent(self.hass, self.entry.entry_id, self)
+        conversation.async_set_agent(self.hass, self.entry, self)
         _LOGGER.debug("Ollama Cloud agent initialized for entry %s", self.entry.entry_id)
 
     async def async_unload(self) -> None:
