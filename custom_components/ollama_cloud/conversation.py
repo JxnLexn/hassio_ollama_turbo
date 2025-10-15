@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import logging
 from typing import Dict, List
 
-from ollama import Client
+from ollama import Client, ResponseError
 
 from homeassistant.components import assist_pipeline, conversation
 from homeassistant.components.conversation import (
@@ -23,6 +24,9 @@ from homeassistant.util import ulid
 
 from . import OllamaCloudRuntimeData
 from .const import DOMAIN, SIGNAL_RUNTIME_DATA_UPDATED, TITLE
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -64,6 +68,7 @@ class OllamaCloudConversationEntity(
             name=TITLE,
             entry_type=dr.DeviceEntryType.SERVICE,
         )
+        self._reauth_in_progress = False
 
     @property
     def supported_languages(self) -> list[str] | str:
@@ -107,23 +112,30 @@ class OllamaCloudConversationEntity(
         messages.extend(memory.messages)
         messages.append({"role": "user", "content": user_input.text})
 
-        response = await self.hass.async_add_executor_job(
-            _chat_with_client,
-            self._client,
-            self._model,
-            messages,
-        )
+        try:
+            response = await self.hass.async_add_executor_job(
+                _chat_with_client,
+                self._client,
+                self._model,
+                messages,
+            )
+        except ResponseError as err:
+            _LOGGER.warning("Ollama Cloud request failed: %s", err)
+            content = self._build_error_response(err)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected error while querying Ollama Cloud")
+            content = "I ran into an unexpected error while contacting Ollama Cloud."
+        else:
+            content = response.get("message", {}).get("content", "")
+            if not content:
+                content = "I was unable to generate a response right now."
 
-        content: str = response.get("message", {}).get("content", "")
-        if not content:
-            content = "I was unable to generate a response right now."
-
-        memory.messages.extend(
-            [
-                {"role": "user", "content": user_input.text},
-                {"role": "assistant", "content": content},
-            ]
-        )
+            memory.messages.extend(
+                [
+                    {"role": "user", "content": user_input.text},
+                    {"role": "assistant", "content": content},
+                ]
+            )
 
         return conversation.ConversationResult(
             response=conversation.ConversationResponse(text=content),
@@ -138,6 +150,30 @@ class OllamaCloudConversationEntity(
         self._client = runtime_data.client
         self._model = runtime_data.model
         self._system_prompt = runtime_data.system_prompt
+        self._reauth_in_progress = False
+
+    def _build_error_response(self, err: ResponseError) -> str:
+        """Build a user facing error message for the given exception."""
+        if err.status_code == 401:
+            message = (
+                "Authorization failed while talking to Ollama Cloud. "
+                "Please re-authorize the integration."
+            )
+            if not self._reauth_in_progress:
+                self._reauth_in_progress = True
+                self.hass.async_create_task(
+                    self.hass.config_entries.flow.async_init(
+                        DOMAIN,
+                        context={"source": "reauth", "entry_id": self.entry.entry_id},
+                        data=self.entry.data,
+                    )
+                )
+            return message
+
+        return (
+            "Ollama Cloud reported an error while processing the request: "
+            f"{err.error}"
+        )
 
 
 def _chat_with_client(client: Client, model: str, messages: list[dict[str, str]]) -> dict:
